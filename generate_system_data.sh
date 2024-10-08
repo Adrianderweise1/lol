@@ -173,7 +173,7 @@ cat << EOF > $OUTPUT_FILE
             <div class="chart-container">
                 <canvas id="loadChart"></canvas>
             </div>
-            <p>Aktuelle Last: $(uptime | awk -F'load average:' '{ print $2 }' | cut -d',' -f1)</p>
+            
             <button class="toggle-btn" onclick="toggleVisibility('fullLoadInfo')">Vollständige Infos</button>
             <pre id="fullLoadInfo" class="hidden">$(uptime)</pre>
         </div>
