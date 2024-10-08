@@ -95,6 +95,25 @@ cat << EOF > $OUTPUT_FILE
         .hidden {
             display: none;
         }
+        .info-grid {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 10px;
+            align-items: center;
+        }
+        .info-label {
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .info-value {
+            color: #34495e;
+        }
+        .icon {
+            width: 20px;
+            height: 20px;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
         @media (max-width: 600px) {
             .dashboard {
                 grid-template-columns: 1fr;
@@ -108,10 +127,45 @@ cat << EOF > $OUTPUT_FILE
     <div class="dashboard">
         <div class="card">
             <h2>System-Informationen</h2>
-            <p><strong>Hostname:</strong> $(hostname)</p>
-            <p><strong>Betriebssystem:</strong> $(cat /etc/os-release | grep PRETTY_NAME | cut -d'"' -f2)</p>
-            <p><strong>Kernel:</strong> $(uname -r)</p>
-            <p><strong>Uptime:</strong> $(uptime -p)</p>
+            <div class="info-grid">
+                <span class="info-label">
+                    <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
+                        <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
+                        <line x1="6" y1="6" x2="6.01" y2="6"></line>
+                        <line x1="6" y1="18" x2="6.01" y2="18"></line>
+                    </svg>
+                    Hostname:
+                </span>
+                <span class="info-value">$(hostname)</span>
+
+                <span class="info-label">
+                    <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                    </svg>
+                    Betriebssystem:
+                </span>
+                <span class="info-value">$(cat /etc/os-release | grep PRETTY_NAME | cut -d'"' -f2)</span>
+
+                <span class="info-label">
+                    <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="16 18 22 12 16 6"></polyline>
+                        <polyline points="8 6 2 12 8 18"></polyline>
+                    </svg>
+                    Kernel:
+                </span>
+                <span class="info-value">$(uname -r)</span>
+
+                <span class="info-label">
+                    <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                    Uptime:
+                </span>
+                <span class="info-value">$(uptime -p)</span>
+            </div>
         </div>
 
         <div class="card">
@@ -145,10 +199,53 @@ cat << EOF > $OUTPUT_FILE
 
         <div class="card">
             <h2>CPU-Informationen</h2>
-            <p><strong>Modell:</strong> $(lscpu | grep "Model name" | cut -d ':' -f2 | xargs)</p>
-            <p><strong>Kerne:</strong> $(lscpu | grep "CPU(s):" | head -n1 | cut -d ':' -f2 | xargs)</p>
-            <p><strong>Architektur:</strong> $(uname -m)</p>
-            <p><strong>Max. Taktrate:</strong> $(lscpu | grep "CPU max MHz" | cut -d ':' -f2 | xargs) MHz</p>
+            <div class="info-grid">
+                <span class="info-label">
+                    <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect>
+                        <rect x="9" y="9" width="6" height="6"></rect>
+                        <line x1="9" y1="1" x2="9" y2="4"></line>
+                        <line x1="15" y1="1" x2="15" y2="4"></line>
+                        <line x1="9" y1="20" x2="9" y2="23"></line>
+                        <line x1="15" y1="20" x2="15" y2="23"></line>
+                        <line x1="20" y1="9" x2="23" y2="9"></line>
+                        <line x1="20" y1="14" x2="23" y2="14"></line>
+                        <line x1="1" y1="9" x2="4" y2="9"></line>
+                        <line x1="1" y1="14" x2="4" y2="14"></line>
+                    </svg>
+                    Modell:
+                </span>
+                <span class="info-value">$(lscpu | grep "Model name" | cut -d ':' -f2 | xargs)</span>
+
+                <span class="info-label">
+                    <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M18 20V10"></path>
+                        <path d="M12 20V4"></path>
+                        <path d="M6 20v-6"></path>
+                    </svg>
+                    Kerne:
+                </span>
+                <span class="info-value">$(lscpu | grep "CPU(s):" | head -n1 | cut -d ':' -f2 | xargs)</span>
+
+                <span class="info-label">
+                    <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                        <polyline points="2 17 12 22 22 17"></polyline>
+                        <polyline points="2 12 12 17 22 12"></polyline>
+                    </svg>
+                    Architektur:
+                </span>
+                <span class="info-value">$(uname -m)</span>
+
+                <span class="info-label">
+                    <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                    Max. Taktrate:
+                </span>
+                <span class="info-value">$(lscpu | grep "CPU max MHz" | cut -d ':' -f2 | xargs) MHz</span>
+            </div>
             <button class="toggle-btn" onclick="toggleVisibility('fullCpuInfo')">Vollständige Infos</button>
             <pre id="fullCpuInfo" class="hidden">$(lscpu)</pre>
         </div>
@@ -160,8 +257,28 @@ cat << EOF > $OUTPUT_FILE
 
         <div class="card">
             <h2>Netzwerkinformationen</h2>
-            <p><strong>IP-Adresse:</strong> $(hostname -I | awk '{print $1}')</p>
-            <p><strong>Standard-Gateway:</strong> $(ip route | grep default | awk '{print $3}')</p>
+            <div class="info-grid">
+                <span class="info-label">
+                    <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
+                        <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
+                        <line x1="6" y1="6" x2="6.01" y2="6"></line>
+                        <line x1="6" y1="18" x2="6.01" y2="18"></line>
+                    </svg>
+                    IP-Adresse:
+                </span>
+                <span class="info-value">$(hostname -I | awk '{print $1}')</span>
+
+                <span class="info-label">
+                    <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="2" y1="12" x2="22" y2="12"></line>
+                        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                    </svg>
+                    Standard-Gateway:
+                </span>
+                <span class="info-value">$(ip route | grep default | awk '{print $3}')</span>
+            </div>
             <button class="toggle-btn" onclick="toggleVisibility('fullNetworkInfo')">Vollständige Infos</button>
             <pre id="fullNetworkInfo" class="hidden">$(ifconfig)</pre>
         </div>
