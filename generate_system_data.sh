@@ -341,6 +341,8 @@ cat << EOF > $OUTPUT_FILE
     // CPU-Temperatur
     const cpuTempElement = document.getElementById('cpuTemp');
 EOF
+
+# Füge CPU-Temperatur hinzu
 if command -v sensors &> /dev/null; then
     echo "cpuTempElement.innerHTML = \`" >> $OUTPUT_FILE
     sensors | while IFS= read -r line; do
@@ -354,7 +356,6 @@ if command -v sensors &> /dev/null; then
 else
     echo "cpuTempElement.innerHTML = 'lm-sensors ist nicht installiert.';" >> $OUTPUT_FILE
 fi
-
 
 # Schließe die HTML-Tags
 echo "</script></body></html>" >> $OUTPUT_FILE
