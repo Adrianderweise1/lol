@@ -303,4 +303,4 @@ fi
 # Schließe die HTML-Tags
 echo "</script></body></html>" >> $OUTPUT_FILE
 
-echo "Systeminformationen wurden in $OUTPUT_FILE geschrieben."
+
