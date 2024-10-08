@@ -349,7 +349,6 @@ if command -v sensors &> /dev/null; then
         if [[ $line == *"Package id 0:"* ]]; then
             temp=$(echo $line | awk '{print $4}' | tr -d '+°C')
             echo "$(format_temperature $temp)<br>" >> $OUTPUT_FILE
-        elif [[ $line == *"Core "* ]]; then
             core=$(echo $line | awk '{print $2}' | tr -d ':')
             temp=$(echo $line | awk '{print $3}' | tr -d '+°C')
             echo "Core $core: $(format_temperature $temp)<br>" >> $OUTPUT_FILE
