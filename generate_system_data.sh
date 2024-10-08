@@ -188,13 +188,41 @@ cat << EOF > $OUTPUT_FILE
         </div>
 
         <div class="card">
-            <h2>CPU-Temperatur</h2>
-            <div id="cpuTemp"></div>
+            <h2>Netzwerkinformationen</h2>
+            <div class="info-grid">
+                <span class="info-label">
+                    <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
+                        <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
+                        <line x1="6" y1="6" x2="6.01" y2="6"></line>
+                        <line x1="6" y1="18" x2="6.01" y2="18"></line>
+                    </svg>
+                    IP-Adresse:
+                </span>
+                <span class="info-value">$(hostname -I | awk '{print $1}')</span>
+
+                <span class="info-label">
+                    <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="2" y1="12" x2="22" y2="12"></line>
+                        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                    </svg>
+                    Standard-Gateway:
+                </span>
+                <span class="info-value">$(ip route | grep default | awk '{print $3}')</span>
+            </div>
+            <button class="toggle-btn" onclick="toggleVisibility('fullNetworkInfo')">Vollständige Infos</button>
+            <pre id="fullNetworkInfo" class="hidden">$(ifconfig)</pre>
         </div>
 
         <div class="card">
             <h2>Aktuelle Benutzer</h2>
             <pre>$(who)</pre>
+        </div>
+
+        <div class="card">
+            <h2>CPU-Temperatur</h2>
+            <div id="cpuTemp"></div>
         </div>
 
         <div class="card">
@@ -253,34 +281,6 @@ cat << EOF > $OUTPUT_FILE
         <div class="card">
             <h2>Festplatteninformationen</h2>
             <pre>$(df -h)</pre>
-        </div>
-
-        <div class="card">
-            <h2>Netzwerkinformationen</h2>
-            <div class="info-grid">
-                <span class="info-label">
-                    <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
-                        <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
-                        <line x1="6" y1="6" x2="6.01" y2="6"></line>
-                        <line x1="6" y1="18" x2="6.01" y2="18"></line>
-                    </svg>
-                    IP-Adresse:
-                </span>
-                <span class="info-value">$(hostname -I | awk '{print $1}')</span>
-
-                <span class="info-label">
-                    <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <line x1="2" y1="12" x2="22" y2="12"></line>
-                        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
-                    </svg>
-                    Standard-Gateway:
-                </span>
-                <span class="info-value">$(ip route | grep default | awk '{print $3}')</span>
-            </div>
-            <button class="toggle-btn" onclick="toggleVisibility('fullNetworkInfo')">Vollständige Infos</button>
-            <pre id="fullNetworkInfo" class="hidden">$(ifconfig)</pre>
         </div>
     </div>
 
@@ -346,7 +346,7 @@ EOF
 if command -v sensors &> /dev/null; then
     echo "cpuTempElement.innerHTML = \`" >> $OUTPUT_FILE
     sensors | while IFS= read -r line; do
-        if [[ $line == *"Core "* ]]; then
+        if [[ $line == "Core " ]]; then
             core=$(echo $line | awk '{print $2}' | tr -d ':')
             temp=$(echo $line | awk '{print $3}' | tr -d '+°C')
             echo "Core $core: $(format_temperature $temp)<br>" >> $OUTPUT_FILE
