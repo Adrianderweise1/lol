@@ -279,7 +279,8 @@ cat << EOF > $OUTPUT_FILE
         </div>
     </div>
      <div class="card">
-            <h2>Aktuelle Benutzer</h2>
+      <h2>Aktuelle Benutzer</h2>
+       <div class="info-grid">
             <pre>$(who)</pre>
         </div>
 
