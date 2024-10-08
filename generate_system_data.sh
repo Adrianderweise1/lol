@@ -95,14 +95,6 @@ cat << EOF > $OUTPUT_FILE
         .hidden {
             display: none;
         }
-        .info-grid {
-            display: grid;
-            grid-template-columns: auto 1fr;
-            gap: 10px;
-        }
-        .info-label {
-            font-weight: bold;
-        }
         @media (max-width: 600px) {
             .dashboard {
                 grid-template-columns: 1fr;
@@ -115,17 +107,8 @@ cat << EOF > $OUTPUT_FILE
 
     <div class="dashboard">
         <div class="card">
-            <h2>System-Informationen</h2>
-            <div class="info-grid">
-                <span class="info-label">Hostname:</span>
-                <span>$(hostname)</span>
-                <span class="info-label">Betriebssystem:</span>
-                <span>$(cat /etc/os-release | grep PRETTY_NAME | cut -d'"' -f2)</span>
-                <span class="info-label">Kernel:</span>
-                <span>$(uname -r)</span>
-                <span class="info-label">Uptime:</span>
-                <span>$(uptime -p)</span>
-            </div>
+            <h2>Hostname</h2>
+            <p>$(hostname)</p>
         </div>
 
         <div class="card">
@@ -159,35 +142,10 @@ cat << EOF > $OUTPUT_FILE
 
         <div class="card">
             <h2>CPU-Informationen</h2>
-            <div class="info-grid">
-                <span class="info-label">Modell:</span>
-                <span>$(lscpu | grep "Model name" | cut -d ':' -f2 | xargs)</span>
-                <span class="info-label">Kerne:</span>
-                <span>$(lscpu | grep "CPU(s):" | head -n1 | cut -d ':' -f2 | xargs)</span>
-                <span class="info-label">Architektur:</span>
-                <span>$(uname -m)</span>
-                <span class="info-label">Max. Taktrate:</span>
-                <span>$(lscpu | grep "CPU max MHz" | cut -d ':' -f2 | xargs) MHz</span>
-            </div>
+            <p>Modell: $(lscpu | grep "Model name" | cut -d ':' -f2 | xargs)</p>
+            <p>Kerne: $(lscpu | grep "CPU(s):" | head -n1 | cut -d ':' -f2 | xargs)</p>
             <button class="toggle-btn" onclick="toggleVisibility('fullCpuInfo')">Vollständige Infos</button>
             <pre id="fullCpuInfo" class="hidden">$(lscpu)</pre>
-        </div>
-
-        <div class="card">
-            <h2>Festplatteninformationen</h2>
-            <pre>$(df -h)</pre>
-        </div>
-
-        <div class="card">
-            <h2>Netzwerkinformationen</h2>
-            <div class="info-grid">
-                <span class="info-label">IP-Adresse:</span>
-                <span>$(hostname -I | awk '{print $1}')</span>
-                <span class="info-label">Standard-Gateway:</span>
-                <span>$(ip route | grep default | awk '{print $3}')</span>
-            </div>
-            <button class="toggle-btn" onclick="toggleVisibility('fullNetworkInfo')">Vollständige Infos</button>
-            <pre id="fullNetworkInfo" class="hidden">$(ifconfig)</pre>
         </div>
     </div>
 
@@ -202,6 +160,7 @@ cat << EOF > $OUTPUT_FILE
         }
     }
 
+    // Systemlast-Chart
     const loadCtx = document.getElementById('loadChart').getContext('2d');
     const loadData = '$(uptime | awk -F'load average:' '{ print $2 }' | sed 's/,//g')'.trim().split(' ');
     new Chart(loadCtx, {
@@ -226,7 +185,7 @@ cat << EOF > $OUTPUT_FILE
         }
     });
 
-    
+    // Speichernutzung-Chart
     const memoryCtx = document.getElementById('memoryChart').getContext('2d');
     const memoryData = '$(free | awk 'NR==2{print $2","$3","$4","$6}')'.split(',');
     new Chart(memoryCtx, {
@@ -241,19 +200,6 @@ cat << EOF > $OUTPUT_FILE
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: {
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            const label = context.label || '';
-                            const value = context.raw || 0;
-                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                            const percentage = ((value / total) * 100).toFixed(2);
-                            return \`\${label}: \${percentage}% (\${(value / 1024).toFixed(2)} GB)\`;
-                        }
-                    }
-                }
-            }
         }
     });
 
@@ -261,20 +207,25 @@ cat << EOF > $OUTPUT_FILE
     const cpuTempElement = document.getElementById('cpuTemp');
 EOF
 
+# Füge CPU-Temperatur hinzu
 if command -v sensors &> /dev/null; then
-    echo "cpuTempElement.innerHTML = '<h3>Aktuelle Temperaturen:</h3>';" >> $OUTPUT_FILE
+    echo "cpuTempElement.innerHTML = \`" >> $OUTPUT_FILE
     sensors | while IFS= read -r line; do
         if [[ $line == *"Package id 0:"* ]]; then
             temp=$(echo $line | awk '{print $4}' | tr -d '+°C')
-            echo "cpuTempElement.innerHTML += 'Gesamt: $(format_temperature $temp)<br>';" >> $OUTPUT_FILE
+            echo "$(format_temperature $temp)<br>" >> $OUTPUT_FILE
         elif [[ $line == *"Core "* ]]; then
             core=$(echo $line | awk '{print $2}' | tr -d ':')
             temp=$(echo $line | awk '{print $3}' | tr -d '+°C')
-            echo "cpuTempElement.innerHTML += 'Core $core: $(format_temperature $temp)<br>';" >> $OUTPUT_FILE
+            echo "Core $core: $(format_temperature $temp)<br>" >> $OUTPUT_FILE
         fi
     done
+    echo "\`;" >> $OUTPUT_FILE
 else
     echo "cpuTempElement.innerHTML = 'lm-sensors ist nicht installiert.';" >> $OUTPUT_FILE
 fi
 
+# Schließe die HTML-Tags
 echo "</script></body></html>" >> $OUTPUT_FILE
+
+echo "Systeminformationen wurden in $OUTPUT_FILE geschrieben."
