@@ -1,20 +1,33 @@
 #!/bin/bash
 
-# Beispiel: Sammeln der CPU-Temperatur (funktioniert auf RPi)
-TEMPERATURE=$(vcgencmd measure_temp | grep -o '[0-9]*\.[0-9]*')
+# Ausgabe-HTML-Datei
+OUTPUT_FILE="/var/www/html/system_data.html"
 
-# Generieren der HTML-Datei
-cat <<EOF > /var/www/html/system_data.html
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="refresh" content="300">
-    <title>System Data</title>
-</head>
-<body>
-    <h1>System Data</h1>
-    <p>CPU Temperature: ${TEMPERATURE}°C</p>
-</body>
-</html>
-EOF
+# Erstelle die HTML-Datei und schreibe den Header
+echo "<html><head><title>Systemdaten</title></head><body>" > $OUTPUT_FILE
+echo "<h1>Systemdaten</h1>" >> $OUTPUT_FILE
+
+# Füge Hostname hinzu
+echo "<h2>Hostname</h2>" >> $OUTPUT_FILE
+echo "<p>$(hostname)</p>" >> $OUTPUT_FILE
+
+# Füge aktuelle Benutzer hinzu
+echo "<h2>Aktuelle Benutzer</h2>" >> $OUTPUT_FILE
+echo "<p>$(who)</p>" >> $OUTPUT_FILE
+
+# Füge Systemlast hinzu
+echo "<h2>Systemlast</h2>" >> $OUTPUT_FILE
+echo "<p>$(uptime | awk -F'load average:' '{ print $2 }' | cut -d',' -f1)</p>" >> $OUTPUT_FILE
+
+# Füge CPU-Informationen hinzu
+echo "<h2>CPU-Informationen</h2>" >> $OUTPUT_FILE
+echo "<pre>$(lscpu)</pre>" >> $OUTPUT_FILE
+
+# Füge Speicherinformationen hinzu
+echo "<h2>Speicherinformationen</h2>" >> $OUTPUT_FILE
+echo "<pre>$(free -h)</pre>" >> $OUTPUT_FILE
+
+# Schließe die HTML-Tags
+echo "</body></html>" >> $OUTPUT_FILE
+
+echo "Systeminformationen wurden in $OUTPUT_FILE geschrieben."
