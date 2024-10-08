@@ -341,11 +341,10 @@ cat << EOF > $OUTPUT_FILE
     // CPU-Temperatur
     const cpuTempElement = document.getElementById('cpuTemp');
 EOF
-# Füge CPU-Temperatur hinzu
 if command -v sensors &> /dev/null; then
     echo "cpuTempElement.innerHTML = \`" >> $OUTPUT_FILE
     sensors | while IFS= read -r line; do
-        if [[ $line == "Core " ]]; then
+        if [[ $line == *"Core "* ]]; then
             core=$(echo $line | awk '{print $2}' | tr -d ':')
             temp=$(echo $line | awk '{print $3}' | tr -d '+°C')
             echo "Core $core: $(format_temperature $temp)<br>" >> $OUTPUT_FILE
