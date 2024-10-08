@@ -192,9 +192,14 @@ cat << EOF > $OUTPUT_FILE
             <div id="cpuTemp"></div>
         </div>
 
-       <div class="card">
+       
+        <div class="card">
             <h2>Aktuelle Benutzer</h2>
-            <pre>$(cut -d: -f1 /etc/passwd)</pre>
+            <pre id="userList">
+$(cut -d: -f1 /etc/passwd | head -n 5)
+            </pre>
+            <button class="toggle-btn" onclick="toggleVisibility('fullUserList')">Vollständige Benutzer anzeigen</button>
+            <pre id="fullUserList" class="hidden">$(cut -d: -f1 /etc/passwd)</pre>
         </div>
 
         <div class="card">
