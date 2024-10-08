@@ -15,6 +15,13 @@ format_temperature() {
     fi
 }
 
+# Erfasse Systemdaten
+HOSTNAME=$(hostname)
+USERS=$(who)
+LOAD=$(uptime | awk -F'load average:' '{ print $2 }' | sed 's/,//g')
+CPU_INFO=$(lscpu | grep -E "Model name|CPU$$s$$|Thread$$s$$ per core|Core$$s$$ per socket|Socket$$s$$")
+MEMORY_INFO=$(free -m | awk 'NR==2{printf "%.1f,%.1f,%.1f", $3/1024, $4/1024, $6/1024}')
+
 # Erstelle die HTML-Datei mit eingebettetem CSS und JavaScript
 cat << EOF > $OUTPUT_FILE
 <!DOCTYPE html>
@@ -93,7 +100,7 @@ cat << EOF > $OUTPUT_FILE
     <div class="dashboard">
         <div class="card">
             <h2>Hostname</h2>
-            <p>$(hostname)</p>
+            <p>$HOSTNAME</p>
         </div>
 
         <div class="card">
@@ -117,12 +124,12 @@ cat << EOF > $OUTPUT_FILE
 
         <div class="card">
             <h2>Aktuelle Benutzer</h2>
-            <pre>$(who)</pre>
+            <pre>$USERS</pre>
         </div>
 
         <div class="card">
             <h2>CPU-Informationen</h2>
-            <pre>$(lscpu | grep -E "Modellname|CPU$$s$$|Thread$$s$$ pro Kern|Kern$$e$$ pro Sockel|Sockel")</pre>
+            <pre>$CPU_INFO</pre>
         </div>
     </div>
 
@@ -135,7 +142,7 @@ cat << EOF > $OUTPUT_FILE
             labels: ['5 min', '10 min', '15 min'],
             datasets: [{
                 label: 'Systemlast',
-                data: [$(uptime | awk -F'load average:' '{ print $2 }' | sed 's/,//g')],
+                data: [$LOAD],
                 borderColor: 'rgb(75, 192, 192)',
                 tension: 0.1
             }]
@@ -153,13 +160,13 @@ cat << EOF > $OUTPUT_FILE
 
     // Speichernutzung-Chart
     const memoryCtx = document.getElementById('memoryChart').getContext('2d');
-    const memoryData = \`$(free -m | awk 'NR==2{print $2","$3","$4","$6}')\`.split(',');
+    const memoryData = '$MEMORY_INFO'.split(',');
     new Chart(memoryCtx, {
         type: 'doughnut',
         data: {
             labels: ['Verwendet', 'Frei', 'Puffer/Cache'],
             datasets: [{
-                data: [memoryData[1], memoryData[2], memoryData[3]],
+                data: memoryData,
                 backgroundColor: ['#e74c3c', '#2ecc71', '#3498db']
             }]
         },
@@ -171,7 +178,7 @@ cat << EOF > $OUTPUT_FILE
 
     // CPU-Temperatur
     const cpuTempElement = document.getElementById('cpuTemp');
-    EOF
+EOF
 
 # Füge CPU-Temperatur hinzu
 if command -v sensors &> /dev/null; then
