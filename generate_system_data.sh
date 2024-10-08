@@ -15,17 +15,29 @@ format_temperature() {
     fi
 }
 
-# Funktion zur Formatierung der Speichergröße
-format_size() {
-    local size=$1
-    if [ $size -ge 1048576 ]; then
-        echo "$(echo "scale=2; $size/1048576" | bc) GB"
-    elif [ $size -ge 1024 ]; then
-        echo "$(echo "scale=2; $size/1024" | bc) MB"
-    else
-        echo "$size KB"
-    fi
+# Funktion zur sicheren Ausführung von Befehlen
+safe_execute() {
+    output=$(eval "$1" 2>&1) || output="Fehler bei der Ausführung von: $1"
+    echo "$output"
 }
+
+# Erfasse Systemdaten
+HOSTNAME=$(safe_execute "hostname")
+OS_INFO=$(safe_execute "cat /etc/os-release | grep PRETTY_NAME | cut -d'\"' -f2")
+KERNEL=$(safe_execute "uname -r")
+UPTIME=$(safe_execute "uptime -p")
+LOAD=$(safe_execute "uptime | awk -F'load average:' '{ print \$2 }' | sed 's/,//g'")
+CPU_MODEL=$(safe_execute "lscpu | grep 'Model name' | cut -d ':' -f2 | xargs")
+CPU_CORES=$(safe_execute "lscpu | grep 'CPU(s):' | head -n1 | cut -d ':' -f2 | xargs")
+CPU_ARCH=$(safe_execute "uname -m")
+CPU_MAX_FREQ=$(safe_execute "lscpu | grep 'CPU max MHz' | cut -d ':' -f2 | xargs")
+MEMORY_INFO=$(safe_execute "free -h")
+DISK_INFO=$(safe_execute "df -h")
+IP_ADDRESS=$(safe_execute "hostname -I | awk '{print \$1}'")
+GATEWAY=$(safe_execute "ip route | grep default | awk '{print \$3}'")
+USERS=$(safe_execute "who")
+FULL_CPU_INFO=$(safe_execute "lscpu")
+NETWORK_INFO=$(safe_execute "ifconfig")
 
 # Erstelle die HTML-Datei mit eingebettetem CSS und JavaScript
 cat << EOF > $OUTPUT_FILE
@@ -130,13 +142,13 @@ cat << EOF > $OUTPUT_FILE
             <h2>System-Informationen</h2>
             <div class="info-grid">
                 <span class="info-label">Hostname:</span>
-                <span>$(hostname)</span>
+                <span>$HOSTNAME</span>
                 <span class="info-label">Betriebssystem:</span>
-                <span>$(cat /etc/os-release | grep PRETTY_NAME | cut -d'"' -f2)</span>
+                <span>$OS_INFO</span>
                 <span class="info-label">Kernel:</span>
-                <span>$(uname -r)</span>
+                <span>$KERNEL</span>
                 <span class="info-label">Uptime:</span>
-                <span>$(uptime -p)</span>
+                <span>$UPTIME</span>
             </div>
         </div>
 
@@ -145,9 +157,9 @@ cat << EOF > $OUTPUT_FILE
             <div class="chart-container">
                 <canvas id="loadChart"></canvas>
             </div>
-            <p>Aktuelle Last: $(uptime | awk -F'load average:' '{ print $2 }' | cut -d',' -f1)</p>
+            <p>Aktuelle Last: $LOAD</p>
             <button class="toggle-btn" onclick="toggleVisibility('fullLoadInfo')">Vollständige Infos</button>
-            <pre id="fullLoadInfo" class="hidden">$(uptime)</pre>
+            <pre id="fullLoadInfo" class="hidden">$(safe_execute "uptime")</pre>
         </div>
 
         <div class="card">
@@ -156,7 +168,7 @@ cat << EOF > $OUTPUT_FILE
                 <canvas id="memoryChart"></canvas>
             </div>
             <button class="toggle-btn" onclick="toggleVisibility('fullMemoryInfo')">Vollständige Infos</button>
-            <pre id="fullMemoryInfo" class="hidden">$(free -h)</pre>
+            <pre id="fullMemoryInfo" class="hidden">$MEMORY_INFO</pre>
         </div>
 
         <div class="card">
@@ -166,49 +178,40 @@ cat << EOF > $OUTPUT_FILE
 
         <div class="card">
             <h2>Aktuelle Benutzer</h2>
-            <pre>$(who)</pre>
+            <pre>$USERS</pre>
         </div>
 
         <div class="card">
             <h2>CPU-Informationen</h2>
             <div class="info-grid">
                 <span class="info-label">Modell:</span>
-                <span>$(lscpu | grep "Model name" | cut -d ':' -f2 | xargs)</span>
+                <span>$CPU_MODEL</span>
                 <span class="info-label">Kerne:</span>
-                <span>$(lscpu | grep "CPU(s):" | head -n1 | cut -d ':' -f2 | xargs)</span>
+                <span>$CPU_CORES</span>
                 <span class="info-label">Architektur:</span>
-                <span>$(uname -m)</span>
+                <span>$CPU_ARCH</span>
                 <span class="info-label">Max. Taktrate:</span>
-                <span>$(lscpu | grep "CPU max MHz" | cut -d ':' -f2 | xargs) MHz</span>
+                <span>$CPU_MAX_FREQ MHz</span>
             </div>
             <button class="toggle-btn" onclick="toggleVisibility('fullCpuInfo')">Vollständige Infos</button>
-            <pre id="fullCpuInfo" class="hidden">$(lscpu)</pre>
+            <pre id="fullCpuInfo" class="hidden">$FULL_CPU_INFO</pre>
         </div>
 
         <div class="card">
             <h2>Festplatteninformationen</h2>
-            <div class="info-grid">
-                <span class="info-label">Gesamtspeicher:</span>
-                <span>$(df -h --total | grep total | awk '{print $2}')</span>
-                <span class="info-label">Verwendet:</span>
-                <span>$(df -h --total | grep total | awk '{print $3}')</span>
-                <span class="info-label">Verfügbar:</span>
-                <span>$(df -h --total | grep total | awk '{print $4}')</span>
-            </div>
-            <button class="toggle-btn" onclick="toggleVisibility('fullDiskInfo')">Vollständige Infos</button>
-            <pre id="fullDiskInfo" class="hidden">$(df -h)</pre>
+            <pre>$DISK_INFO</pre>
         </div>
 
         <div class="card">
             <h2>Netzwerkinformationen</h2>
             <div class="info-grid">
                 <span class="info-label">IP-Adresse:</span>
-                <span>$(hostname -I | awk '{print $1}')</span>
+                <span>$IP_ADDRESS</span>
                 <span class="info-label">Standard-Gateway:</span>
-                <span>$(ip route | grep default | awk '{print $3}')</span>
+                <span>$GATEWAY</span>
             </div>
             <button class="toggle-btn" onclick="toggleVisibility('fullNetworkInfo')">Vollständige Infos</button>
-            <pre id="fullNetworkInfo" class="hidden">$(ifconfig)</pre>
+            <pre id="fullNetworkInfo" class="hidden">$NETWORK_INFO</pre>
         </div>
     </div>
 
@@ -225,7 +228,7 @@ cat << EOF > $OUTPUT_FILE
 
     // Systemlast-Chart
     const loadCtx = document.getElementById('loadChart').getContext('2d');
-    const loadData = '$(uptime | awk -F'load average:' '{ print $2 }' | sed 's/,//g')'.trim().split(' ');
+    const loadData = '$LOAD'.trim().split(' ');
     new Chart(loadCtx, {
         type: 'line',
         data: {
@@ -302,5 +305,3 @@ fi
 
 # Schließe die HTML-Tags
 echo "</script></body></html>" >> $OUTPUT_FILE
-
-
