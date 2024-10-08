@@ -15,30 +15,6 @@ format_temperature() {
     fi
 }
 
-# Funktion zur sicheren Ausführung von Befehlen
-safe_execute() {
-    output=$(eval "$1" 2>&1) || output="Fehler bei der Ausführung von: $1"
-    echo "$output"
-}
-
-# Erfasse Systemdaten
-HOSTNAME=$(safe_execute "hostname")
-OS_INFO=$(safe_execute "cat /etc/os-release | grep PRETTY_NAME | cut -d'\"' -f2")
-KERNEL=$(safe_execute "uname -r")
-UPTIME=$(safe_execute "uptime -p")
-LOAD=$(safe_execute "uptime | awk -F'load average:' '{ print \$2 }' | sed 's/,//g'")
-CPU_MODEL=$(safe_execute "lscpu | grep 'Model name' | cut -d ':' -f2 | xargs")
-CPU_CORES=$(safe_execute "lscpu | grep 'CPU(s):' | head -n1 | cut -d ':' -f2 | xargs")
-CPU_ARCH=$(safe_execute "uname -m")
-CPU_MAX_FREQ=$(safe_execute "lscpu | grep 'CPU max MHz' | cut -d ':' -f2 | xargs")
-MEMORY_INFO=$(safe_execute "free -h")
-DISK_INFO=$(safe_execute "df -h")
-IP_ADDRESS=$(safe_execute "hostname -I | awk '{print \$1}'")
-GATEWAY=$(safe_execute "ip route | grep default | awk '{print \$3}'")
-USERS=$(safe_execute "who")
-FULL_CPU_INFO=$(safe_execute "lscpu")
-NETWORK_INFO=$(safe_execute "ifconfig")
-
 # Erstelle die HTML-Datei mit eingebettetem CSS und JavaScript
 cat << EOF > $OUTPUT_FILE
 <!DOCTYPE html>
@@ -142,13 +118,13 @@ cat << EOF > $OUTPUT_FILE
             <h2>System-Informationen</h2>
             <div class="info-grid">
                 <span class="info-label">Hostname:</span>
-                <span>$HOSTNAME</span>
+                <span>$(hostname)</span>
                 <span class="info-label">Betriebssystem:</span>
-                <span>$OS_INFO</span>
+                <span>$(cat /etc/os-release | grep PRETTY_NAME | cut -d'"' -f2)</span>
                 <span class="info-label">Kernel:</span>
-                <span>$KERNEL</span>
+                <span>$(uname -r)</span>
                 <span class="info-label">Uptime:</span>
-                <span>$UPTIME</span>
+                <span>$(uptime -p)</span>
             </div>
         </div>
 
@@ -157,9 +133,9 @@ cat << EOF > $OUTPUT_FILE
             <div class="chart-container">
                 <canvas id="loadChart"></canvas>
             </div>
-            <p>Aktuelle Last: $LOAD</p>
+            <p>Aktuelle Last: $(uptime | awk -F'load average:' '{ print $2 }' | cut -d',' -f1)</p>
             <button class="toggle-btn" onclick="toggleVisibility('fullLoadInfo')">Vollständige Infos</button>
-            <pre id="fullLoadInfo" class="hidden">$(safe_execute "uptime")</pre>
+            <pre id="fullLoadInfo" class="hidden">$(uptime)</pre>
         </div>
 
         <div class="card">
@@ -168,7 +144,7 @@ cat << EOF > $OUTPUT_FILE
                 <canvas id="memoryChart"></canvas>
             </div>
             <button class="toggle-btn" onclick="toggleVisibility('fullMemoryInfo')">Vollständige Infos</button>
-            <pre id="fullMemoryInfo" class="hidden">$MEMORY_INFO</pre>
+            <pre id="fullMemoryInfo" class="hidden">$(free -h)</pre>
         </div>
 
         <div class="card">
@@ -178,40 +154,40 @@ cat << EOF > $OUTPUT_FILE
 
         <div class="card">
             <h2>Aktuelle Benutzer</h2>
-            <pre>$USERS</pre>
+            <pre>$(who)</pre>
         </div>
 
         <div class="card">
             <h2>CPU-Informationen</h2>
             <div class="info-grid">
                 <span class="info-label">Modell:</span>
-                <span>$CPU_MODEL</span>
+                <span>$(lscpu | grep "Model name" | cut -d ':' -f2 | xargs)</span>
                 <span class="info-label">Kerne:</span>
-                <span>$CPU_CORES</span>
+                <span>$(lscpu | grep "CPU(s):" | head -n1 | cut -d ':' -f2 | xargs)</span>
                 <span class="info-label">Architektur:</span>
-                <span>$CPU_ARCH</span>
+                <span>$(uname -m)</span>
                 <span class="info-label">Max. Taktrate:</span>
-                <span>$CPU_MAX_FREQ MHz</span>
+                <span>$(lscpu | grep "CPU max MHz" | cut -d ':' -f2 | xargs) MHz</span>
             </div>
             <button class="toggle-btn" onclick="toggleVisibility('fullCpuInfo')">Vollständige Infos</button>
-            <pre id="fullCpuInfo" class="hidden">$FULL_CPU_INFO</pre>
+            <pre id="fullCpuInfo" class="hidden">$(lscpu)</pre>
         </div>
 
         <div class="card">
             <h2>Festplatteninformationen</h2>
-            <pre>$DISK_INFO</pre>
+            <pre>$(df -h)</pre>
         </div>
 
         <div class="card">
             <h2>Netzwerkinformationen</h2>
             <div class="info-grid">
                 <span class="info-label">IP-Adresse:</span>
-                <span>$IP_ADDRESS</span>
+                <span>$(hostname -I | awk '{print $1}')</span>
                 <span class="info-label">Standard-Gateway:</span>
-                <span>$GATEWAY</span>
+                <span>$(ip route | grep default | awk '{print $3}')</span>
             </div>
             <button class="toggle-btn" onclick="toggleVisibility('fullNetworkInfo')">Vollständige Infos</button>
-            <pre id="fullNetworkInfo" class="hidden">$NETWORK_INFO</pre>
+            <pre id="fullNetworkInfo" class="hidden">$(ifconfig)</pre>
         </div>
     </div>
 
@@ -226,9 +202,8 @@ cat << EOF > $OUTPUT_FILE
         }
     }
 
-    // Systemlast-Chart
     const loadCtx = document.getElementById('loadChart').getContext('2d');
-    const loadData = '$LOAD'.trim().split(' ');
+    const loadData = '$(uptime | awk -F'load average:' '{ print $2 }' | sed 's/,//g')'.trim().split(' ');
     new Chart(loadCtx, {
         type: 'line',
         data: {
@@ -251,7 +226,7 @@ cat << EOF > $OUTPUT_FILE
         }
     });
 
-    // Speichernutzung-Chart
+    
     const memoryCtx = document.getElementById('memoryChart').getContext('2d');
     const memoryData = '$(free | awk 'NR==2{print $2","$3","$4","$6}')'.split(',');
     new Chart(memoryCtx, {
@@ -286,7 +261,6 @@ cat << EOF > $OUTPUT_FILE
     const cpuTempElement = document.getElementById('cpuTemp');
 EOF
 
-# Füge CPU-Temperatur hinzu
 if command -v sensors &> /dev/null; then
     echo "cpuTempElement.innerHTML = '<h3>Aktuelle Temperaturen:</h3>';" >> $OUTPUT_FILE
     sensors | while IFS= read -r line; do
@@ -303,5 +277,4 @@ else
     echo "cpuTempElement.innerHTML = 'lm-sensors ist nicht installiert.';" >> $OUTPUT_FILE
 fi
 
-# Schließe die HTML-Tags
 echo "</script></body></html>" >> $OUTPUT_FILE
