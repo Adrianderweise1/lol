@@ -107,8 +107,11 @@ cat << EOF > $OUTPUT_FILE
 
     <div class="dashboard">
         <div class="card">
-            <h2>Hostname</h2>
-            <p>$(hostname)</p>
+            <h2>System-Informationen</h2>
+            <p><strong>Hostname:</strong> $(hostname)</p>
+            <p><strong>Betriebssystem:</strong> $(cat /etc/os-release | grep PRETTY_NAME | cut -d'"' -f2)</p>
+            <p><strong>Kernel:</strong> $(uname -r)</p>
+            <p><strong>Uptime:</strong> $(uptime -p)</p>
         </div>
 
         <div class="card">
@@ -142,10 +145,25 @@ cat << EOF > $OUTPUT_FILE
 
         <div class="card">
             <h2>CPU-Informationen</h2>
-            <p>Modell: $(lscpu | grep "Model name" | cut -d ':' -f2 | xargs)</p>
-            <p>Kerne: $(lscpu | grep "CPU(s):" | head -n1 | cut -d ':' -f2 | xargs)</p>
+            <p><strong>Modell:</strong> $(lscpu | grep "Model name" | cut -d ':' -f2 | xargs)</p>
+            <p><strong>Kerne:</strong> $(lscpu | grep "CPU(s):" | head -n1 | cut -d ':' -f2 | xargs)</p>
+            <p><strong>Architektur:</strong> $(uname -m)</p>
+            <p><strong>Max. Taktrate:</strong> $(lscpu | grep "CPU max MHz" | cut -d ':' -f2 | xargs) MHz</p>
             <button class="toggle-btn" onclick="toggleVisibility('fullCpuInfo')">Vollständige Infos</button>
             <pre id="fullCpuInfo" class="hidden">$(lscpu)</pre>
+        </div>
+
+        <div class="card">
+            <h2>Festplatteninformationen</h2>
+            <pre>$(df -h)</pre>
+        </div>
+
+        <div class="card">
+            <h2>Netzwerkinformationen</h2>
+            <p><strong>IP-Adresse:</strong> $(hostname -I | awk '{print $1}')</p>
+            <p><strong>Standard-Gateway:</strong> $(ip route | grep default | awk '{print $3}')</p>
+            <button class="toggle-btn" onclick="toggleVisibility('fullNetworkInfo')">Vollständige Infos</button>
+            <pre id="fullNetworkInfo" class="hidden">$(ifconfig)</pre>
         </div>
     </div>
 
