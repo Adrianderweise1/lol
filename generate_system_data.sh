@@ -193,6 +193,11 @@ cat << EOF > $OUTPUT_FILE
         </div>
 
         <div class="card">
+            <h2>Aktuelle Benutzer</h2>
+            <pre>$(who)</pre>
+        </div>
+
+        <div class="card">
             <h2>CPU-Informationen</h2>
             <div class="info-grid">
                 <span class="info-label">
@@ -278,11 +283,6 @@ cat << EOF > $OUTPUT_FILE
             <pre id="fullNetworkInfo" class="hidden">$(ifconfig)</pre>
         </div>
     </div>
-     <div class="card">
-      <h2>Aktuelle Benutzer</h2>
-       <div class="info-grid">
-            <pre>$(who)</pre>
-        </div>
 
     <script>
     // Funktion zum Ein-/Ausblenden von Elementen
