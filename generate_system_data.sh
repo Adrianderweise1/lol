@@ -27,6 +27,14 @@ echo "<pre>$(lscpu)</pre>" >> $OUTPUT_FILE
 echo "<h2>Speicherinformationen</h2>" >> $OUTPUT_FILE
 echo "<pre>$(free -h)</pre>" >> $OUTPUT_FILE
 
+# Füge CPU-Temperatur hinzu
+echo "<h2>CPU-Temperatur</h2>" >> $OUTPUT_FILE
+if command -v sensors &> /dev/null; then
+    echo "<pre>$(sensors)</pre>" >> $OUTPUT_FILE
+else
+    echo "<p>lm-sensors ist nicht installiert.</p>" >> $OUTPUT_FILE
+fi
+
 # Schließe die HTML-Tags
 echo "</body></html>" >> $OUTPUT_FILE
 
