@@ -15,13 +15,6 @@ format_temperature() {
     fi
 }
 
-# Erfasse Systemdaten
-HOSTNAME=$(hostname)
-USERS=$(who)
-LOAD=$(uptime | awk -F'load average:' '{ print $2 }' | sed 's/,//g')
-CPU_INFO=$(lscpu | grep -E "Model name|CPU$$s$$|Thread$$s$$ per core|Core$$s$$ per socket|Socket$$s$$")
-MEMORY_INFO=$(free -m | awk 'NR==2{printf "%.1f,%.1f,%.1f", $3/1024, $4/1024, $6/1024}')
-
 # Erstelle die HTML-Datei mit eingebettetem CSS und JavaScript
 cat << EOF > $OUTPUT_FILE
 <!DOCTYPE html>
@@ -87,6 +80,21 @@ cat << EOF > $OUTPUT_FILE
             height: 200px;
             width: 100%;
         }
+        .toggle-btn {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .toggle-btn:hover {
+            background-color: #2980b9;
+        }
+        .hidden {
+            display: none;
+        }
         @media (max-width: 600px) {
             .dashboard {
                 grid-template-columns: 1fr;
@@ -100,7 +108,7 @@ cat << EOF > $OUTPUT_FILE
     <div class="dashboard">
         <div class="card">
             <h2>Hostname</h2>
-            <p>$HOSTNAME</p>
+            <p>$(hostname)</p>
         </div>
 
         <div class="card">
@@ -108,6 +116,9 @@ cat << EOF > $OUTPUT_FILE
             <div class="chart-container">
                 <canvas id="loadChart"></canvas>
             </div>
+            <p>Aktuelle Last: $(uptime | awk -F'load average:' '{ print $2 }' | cut -d',' -f1)</p>
+            <button class="toggle-btn" onclick="toggleVisibility('fullLoadInfo')">Vollständige Infos</button>
+            <pre id="fullLoadInfo" class="hidden">$(uptime)</pre>
         </div>
 
         <div class="card">
@@ -115,6 +126,8 @@ cat << EOF > $OUTPUT_FILE
             <div class="chart-container">
                 <canvas id="memoryChart"></canvas>
             </div>
+            <button class="toggle-btn" onclick="toggleVisibility('fullMemoryInfo')">Vollständige Infos</button>
+            <pre id="fullMemoryInfo" class="hidden">$(free -h)</pre>
         </div>
 
         <div class="card">
@@ -124,25 +137,39 @@ cat << EOF > $OUTPUT_FILE
 
         <div class="card">
             <h2>Aktuelle Benutzer</h2>
-            <pre>$USERS</pre>
+            <pre>$(who)</pre>
         </div>
 
         <div class="card">
             <h2>CPU-Informationen</h2>
-            <pre>$CPU_INFO</pre>
+            <p>Modell: $(lscpu | grep "Model name" | cut -d ':' -f2 | xargs)</p>
+            <p>Kerne: $(lscpu | grep "CPU(s):" | head -n1 | cut -d ':' -f2 | xargs)</p>
+            <button class="toggle-btn" onclick="toggleVisibility('fullCpuInfo')">Vollständige Infos</button>
+            <pre id="fullCpuInfo" class="hidden">$(lscpu)</pre>
         </div>
     </div>
 
     <script>
+    // Funktion zum Ein-/Ausblenden von Elementen
+    function toggleVisibility(id) {
+        var element = document.getElementById(id);
+        if (element.classList.contains('hidden')) {
+            element.classList.remove('hidden');
+        } else {
+            element.classList.add('hidden');
+        }
+    }
+
     // Systemlast-Chart
     const loadCtx = document.getElementById('loadChart').getContext('2d');
+    const loadData = '$(uptime | awk -F'load average:' '{ print $2 }' | sed 's/,//g')'.trim().split(' ');
     new Chart(loadCtx, {
         type: 'line',
         data: {
-            labels: ['5 min', '10 min', '15 min'],
+            labels: ['1 min', '5 min', '15 min'],
             datasets: [{
                 label: 'Systemlast',
-                data: [$LOAD],
+                data: loadData,
                 borderColor: 'rgb(75, 192, 192)',
                 tension: 0.1
             }]
@@ -160,13 +187,13 @@ cat << EOF > $OUTPUT_FILE
 
     // Speichernutzung-Chart
     const memoryCtx = document.getElementById('memoryChart').getContext('2d');
-    const memoryData = '$MEMORY_INFO'.split(',');
+    const memoryData = '$(free | awk 'NR==2{print $2","$3","$4","$6}')'.split(',');
     new Chart(memoryCtx, {
         type: 'doughnut',
         data: {
             labels: ['Verwendet', 'Frei', 'Puffer/Cache'],
             datasets: [{
-                data: memoryData,
+                data: [memoryData[1], memoryData[2], memoryData[3]],
                 backgroundColor: ['#e74c3c', '#2ecc71', '#3498db']
             }]
         },
@@ -200,5 +227,3 @@ fi
 
 # Schließe die HTML-Tags
 echo "</script></body></html>" >> $OUTPUT_FILE
-
-echo "Systeminformationen wurden in $OUTPUT_FILE geschrieben."
