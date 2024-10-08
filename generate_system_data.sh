@@ -344,7 +344,7 @@ EOF
 
 # Füge CPU-Temperatur hinzu
 if command -v sensors &> /dev/null; then
-    echo "cpuTempElement.innerHTML = \`" >> $OUTPUT_FILE
+    
     sensors | while IFS= read -r line; do
         if [[ $line == *"Package id 0:"* ]]; then
             temp=$(echo $line | awk '{print $4}' | tr -d '+°C')
