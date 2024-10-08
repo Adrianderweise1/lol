@@ -192,9 +192,9 @@ cat << EOF > $OUTPUT_FILE
             <div id="cpuTemp"></div>
         </div>
 
-        <div class="card">
+       <div class="card">
             <h2>Aktuelle Benutzer</h2>
-            <pre>$(who)</pre>
+            <pre>$(cut -d: -f1 /etc/passwd)</pre>
         </div>
 
         <div class="card">
